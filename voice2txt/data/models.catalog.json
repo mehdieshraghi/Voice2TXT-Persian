@@ -1,0 +1,38 @@
+{
+  "catalog_version": 2,
+  "source_page": "https://alphacephei.com/vosk/models",
+  "url_template": "https://alphacephei.com/vosk/models/{model_id}.zip",
+  "remote_catalog_hint": "برای دریافت لیست به‌روز، فایل models.catalog.json پروژه را از GitHub بروز کنید یا models_catalog_url را در تنظیمات قرار دهید.",
+  "languages": {
+    "fa": {
+      "label": "فارسی (Persian)",
+      "default_model": "vosk-model-small-fa-0.42",
+      "models": [
+        {
+          "id": "vosk-model-small-fa-0.42",
+          "size": "53M",
+          "recommended": true,
+          "description": "مدل کوچک — مناسب دسکتاپ و موبایل (پیشنهادی)"
+        },
+        {
+          "id": "vosk-model-fa-0.42",
+          "size": "1.6G",
+          "recommended": false,
+          "description": "مدل بزرگ — دقت بالاتر، نیاز به RAM بیشتر"
+        },
+        {
+          "id": "vosk-model-small-fa-0.5",
+          "size": "60M",
+          "recommended": false,
+          "description": "نسخه قبلی مدل کوچک"
+        },
+        {
+          "id": "vosk-model-fa-0.5",
+          "size": "1G",
+          "recommended": false,
+          "description": "نسخه قبلی مدل بزرگ"
+        }
+      ]
+    }
+  }
+}

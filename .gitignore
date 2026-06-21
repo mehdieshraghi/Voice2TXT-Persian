@@ -34,8 +34,9 @@ MANIFEST
 
 # Audio temp & output
 temp.wav
-*.wav
-transcription_*.txt
+output/
+settings.json
+.model_cache/
 
 # Environment & secrets
 .env

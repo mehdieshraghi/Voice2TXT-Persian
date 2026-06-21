@@ -1,0 +1,9 @@
+{
+  "model_path": "vosk-model-small-fa-0.42",
+  "sample_rate": 16000,
+  "record_duration": 5,
+  "output_dir": "output",
+  "chunk_frames": 4000,
+  "max_upload_mb": 25,
+  "models_catalog_url": ""
+}

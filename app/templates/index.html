@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice2TXT — تبدیل گفتار فارسی به متن</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body data-sample-rate="{{ settings.sample_rate }}">
+  <div class="container">
+    <header>
+      <h1>🎙 Voice2TXT Persian</h1>
+      <p>تبدیل گفتار فارسی به متن — آفلاین با Vosk</p>
+      {% if model_ready %}
+        <span class="badge ok">مدل آماده است</span>
+      {% else %}
+        <span class="badge warn" id="model-missing-badge">مدل یافت نشد</span>
+        <button type="button" class="btn btn-primary btn-sm" id="open-install-modal">نصب مدل</button>
+      {% endif %}
+    </header>
+
+    <!-- Main navigation -->
+    <nav class="main-tabs" aria-label="صفحات اصلی">
+      <button type="button" class="main-tab active" data-main-tab="page-transcribe">🎙 تبدیل</button>
+      <button type="button" class="main-tab" data-main-tab="page-settings">⚙️ تنظیمات</button>
+    </nav>
+
+    <!-- Transcribe page -->
+    <div id="page-transcribe" class="main-tab-panel active">
+      <div class="grid">
+        <section class="card">
+          <h2>ورودی صوتی</h2>
+
+          <div class="tabs">
+            <button type="button" class="tab active" data-tab="panel-file">📁 فایل</button>
+            <button type="button" class="tab" data-tab="panel-mic">🎤 میکروفون</button>
+          </div>
+
+          <div id="panel-file" class="tab-panel active">
+            <div id="drop-zone" class="drop-zone">
+              <p>فایل WAV را اینجا بکشید یا کلیک کنید</p>
+              <p style="font-size:0.8rem;margin-top:0.5rem">فرمت WAV — ۱۶kHz mono توصیه می‌شود</p>
+              <input type="file" id="file-input" accept=".wav,audio/wav">
+            </div>
+            <div class="btn-group">
+              <button type="button" id="upload-btn" class="btn btn-primary">تبدیل فایل</button>
+            </div>
+          </div>
+
+          <div id="panel-mic" class="tab-panel">
+            <p style="color:var(--muted);font-size:0.9rem;margin-top:0">
+              <strong>مرورگر:</strong> میکروفون دستگاه شما (HTTPS یا localhost)<br>
+              <strong>سرور:</strong> میکروفون ماشینی که Flask روی آن اجراست
+            </p>
+            <div class="form-row" style="margin-top:1rem">
+              <label for="record-duration-live">مدت ضبط سرور (ثانیه)</label>
+              <input type="number" id="record-duration-live" value="{{ settings.record_duration }}" min="1" max="120">
+            </div>
+            <div class="btn-group">
+              <button type="button" id="browser-record-btn" class="btn btn-danger">🎤 ضبط با مرورگر</button>
+              <button type="button" id="server-record-btn" class="btn btn-secondary">🖥 ضبط از میکروفون سرور</button>
+            </div>
+          </div>
+
+          <div id="transcribe-status" class="status"></div>
+        </section>
+
+        <section class="card">
+          <h2>خروجی متن</h2>
+          <textarea id="output-text" placeholder="متن تبدیل‌شده اینجا نمایش داده می‌شود..." dir="rtl"></textarea>
+          <div class="btn-group">
+            <button type="button" id="copy-btn" class="btn btn-secondary">📋 کپی</button>
+            <button type="button" id="save-btn" class="btn btn-primary">💾 ذخیره فایل</button>
+            <button type="button" id="clear-btn" class="btn btn-secondary">🗑 پاک کردن</button>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Settings page -->
+    <div id="page-settings" class="main-tab-panel">
+      <section class="card">
+        <h2>⚙️ تنظیمات</h2>
+        <form id="settings-form">
+          <div class="grid grid-2">
+            <div class="form-row">
+              <label for="model_path">مسیر مدل Vosk</label>
+              <input type="text" id="model_path" name="model_path" value="{{ settings.model_path }}">
+            </div>
+            <div class="form-row">
+              <label for="output_dir">پوشه خروجی</label>
+              <input type="text" id="output_dir" name="output_dir" value="{{ settings.output_dir }}">
+            </div>
+            <div class="form-row">
+              <label for="sample_rate">نرخ نمونه‌برداری (Hz)</label>
+              <input type="number" id="sample_rate" name="sample_rate" value="{{ settings.sample_rate }}" min="8000" max="48000">
+            </div>
+            <div class="form-row">
+              <label for="record_duration">مدت ضبط پیش‌فرض (ثانیه)</label>
+              <input type="number" id="record_duration" name="record_duration" value="{{ settings.record_duration }}" min="1" max="120">
+            </div>
+            <div class="form-row">
+              <label for="chunk_frames">Chunk frames (Vosk)</label>
+              <input type="number" id="chunk_frames" name="chunk_frames" value="{{ settings.chunk_frames }}" min="512" max="16000">
+            </div>
+            <div class="form-row">
+              <label for="max_upload_mb">حداکثر حجم آپلود (MB)</label>
+              <input type="number" id="max_upload_mb" name="max_upload_mb" value="{{ settings.max_upload_mb }}" min="1" max="100">
+            </div>
+            <div class="form-row">
+              <label for="models_catalog_url">URL کاتالوگ مدل (اختیاری)</label>
+              <input type="text" id="models_catalog_url" name="models_catalog_url" value="{{ settings.models_catalog_url }}" placeholder="https://raw.githubusercontent.com/.../models.catalog.json">
+            </div>
+          </div>
+          <div class="btn-group">
+            <button type="submit" class="btn btn-primary">ذخیره تنظیمات</button>
+          </div>
+        </form>
+        <div id="settings-status" class="status"></div>
+      </section>
+    </div>
+
+    <footer>
+      Voice2TXT-Persian — هستهٔ <code>voice2txt</code> مستقل از Flask است؛ می‌توانید UI یا CLI خود را بسازید.
+    </footer>
+  </div>
+
+  <!-- Model install modal -->
+  <div id="install-modal" class="modal hidden" role="dialog" aria-labelledby="install-modal-title">
+    <div class="modal-backdrop" id="install-modal-backdrop"></div>
+    <div class="modal-content card">
+      <h2 id="install-modal-title">نصب مدل Vosk</h2>
+      <p class="modal-desc">
+        مدل گفتار فارسی روی سیستم شما یافت نشد.
+        <br>مسیر مورد انتظار: <code id="expected-model-path">{{ model_path_resolved }}</code>
+      </p>
+      <p class="modal-desc muted">
+        لیست مدل‌ها از <a href="https://alphacephei.com/vosk/models" target="_blank" rel="noopener">alphacephei.com/vosk/models</a>
+        — URL دانلود از <code>models.catalog.json</code> ساخته می‌شود تا با به‌روزرسانی کاتالوگ، مدل جدید انتخاب شود.
+      </p>
+
+      <div class="form-row">
+        <label for="install-model-select">انتخاب مدل</label>
+        <select id="install-model-select"></select>
+      </div>
+
+      <div id="install-progress" class="progress-wrap hidden">
+        <div class="progress-header">
+          <span id="install-progress-percent" class="progress-percent">0%</span>
+          <span id="install-progress-phase" class="progress-phase">آماده‌سازی</span>
+        </div>
+        <div class="progress-bar"><div id="install-progress-fill" class="progress-fill"></div></div>
+        <p id="install-progress-text" class="progress-text">در حال آماده‌سازی...</p>
+        <p id="install-progress-stats" class="progress-stats"></p>
+      </div>
+
+      <div id="install-status" class="status"></div>
+
+      <div class="btn-group">
+        <button type="button" id="install-confirm-btn" class="btn btn-primary">بله، دانلود و نصب</button>
+        <button type="button" id="install-dismiss-btn" class="btn btn-secondary">بعداً</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.VOICE2TXT = {
+      modelReady: {{ model_ready | tojson }},
+      modelPath: {{ settings.model_path | tojson }}
+    };
+  </script>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
